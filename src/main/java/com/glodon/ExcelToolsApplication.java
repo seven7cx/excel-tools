@@ -31,15 +31,29 @@ public class ExcelToolsApplication {
     }
 
     private static void createExcels(String filePath) throws Exception {
-        File exampleFile = new File(filePath + "模板.xlsx");;
-        List<String> departmentList = Arrays.asList("计价产品部", "计量产品部");
+        File exampleFile = new File(filePath + "模板.xlsx");
+        List<String> departmentList = Arrays.asList("中后台-营销管理中心", "中后台-数字广联达", "中后台-EMT", "中后台-人力资源部", "中后台-审计监察部", "中后台-干部管理部", "中后台-总裁办公室", "中后台-战略管理与发展部", "中后台-法务部", "中后台-董事会办公室", "中后台-行政部", "中后台-财经管理部", "中后台-采购管理部", "中后台-产品研发管理中心", "中后台-投资管理部", "数字造价BG-云造价产品部", "数字造价BG-企业招投标产品部", "数字造价BG-国内渠道部", "数字造价BG-国际产品部", "数字造价BG-国际渠道部", "数字造价BG-广材产品部", "数字造价BG-政务渠道部", "数字造价BG-新咨询事业部", "数字造价BG-服务产品部", "数字造价BG-电子政务产品部", "数字造价BG-研发管理部", "数字造价BG-计价产品部", "数字造价BG-计量产品部", "数字造价BG-运作支持部", "数字造价BG-造价BG公共组", "数字造价BG-造价市场部", "数字施工BG-MagiCAD全球", "数字施工BG-企业管理产品部", "数字施工BG-基建产品部", "数字施工BG-建设方产品部", "数字施工BG-新建造研究院", "数字施工BG-施工BG公共组", "数字施工BG-施工产品市场部", "数字施工BG-施工战略市场部", "数字施工BG-施工渠道部", "数字施工BG-施工运营管理部", "数字施工BG-项目管理产品部", "数字施工BG-项目管理平台部", "区域平台-上海区域平台", "区域平台-山东区域平台", "区域平台-广东区域平台", "区域平台-江苏区域平台", "区域平台-河北区域平台", "区域平台-浙江区域平台", "区域平台-福建区域平台", "区域平台-重庆区域平台", "区域平台-陕西区域平台", "平台技术中心-BIMGIS平台部", "平台技术中心-CIM平台部", "平台技术中心-CTO办公室", "平台技术中心-云平台部", "平台技术中心-图形平台部", "平台技术中心-数字中台部", "平台技术中心-数据智能部", "独立BU-有巢数字BU", "独立BU-数字装修BU", "独立BU-数字金融BU", "独立BU-数字教育BU", "独立BU-数字供采BU", "独立BU-数字城市BU", "创新中心-创新中心");
         StopWatch clock = new StopWatch();
         for (String department : departmentList) {
             clock.start(department);
-            File targetFile = new File(filePath + "2020年年度结算确认-" + department + ".xlsx");
+
+            File targetFile;
+            if (department.contains("-")) {
+                File dir = new File(filePath + department.split("-")[0] + "/");
+                if (!dir.exists()) {
+                    boolean mkdirs = dir.mkdirs();
+                    log.info("Create dir {}, result = {}", dir.getAbsolutePath(), mkdirs);
+                }
+
+                department = department.split("-")[1];
+                targetFile = new File(dir.getAbsolutePath() + "/2020年年度结算确认-" + department + ".xlsx");
+            } else {
+                targetFile = new File(filePath + "2020年年度结算确认-" + department + ".xlsx");
+            }
+
             if (targetFile.exists()) {
                 boolean delete = targetFile.delete();
-                log.info("Delete test file " + department);
+                log.info("Delete test file {}，result = {}", department, delete);
             }
 
             Files.copy(exampleFile.toPath(), targetFile.toPath());
