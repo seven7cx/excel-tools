@@ -250,12 +250,11 @@ public class SheetCopyTools {
     //人专基费用
     public static void copyCostSheet(String origFileName, XSSFWorkbook targetWorkbook, String department) throws IOException {
         XSSFWorkbook origWorkbook = new XSSFWorkbook(new FileInputStream(filePath + origFileName));
-        XSSFCellStyle newStyle = targetWorkbook.createCellStyle();
-        Row row;
+        XSSFRow row;
         XSSFSheet origSheet = origWorkbook.getSheetAt(0);
         XSSFSheet targetSheet = targetWorkbook.createSheet(formatSheetName(origFileName));
         //标题行
-        copyTitleRow(origSheet, targetSheet, newStyle);
+        copyTitleRow(origSheet, targetSheet);
         for (int rowIndex = 5; rowIndex < origSheet.getPhysicalNumberOfRows(); rowIndex++) {
             if (!department.equals(origSheet.getRow(rowIndex).getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue())) {
                 //且排除部门名称不匹配的行
@@ -263,7 +262,7 @@ public class SheetCopyTools {
             }
             //create row in this new sheet
             row = targetSheet.createRow(targetSheet.getLastRowNum() + 1);
-            doCopySheetData(origSheet, row, rowIndex, newStyle);
+            doCopySheetData(origSheet, row, rowIndex);
         }
         createSumRowAndStyle(targetSheet);
         origWorkbook.close();
@@ -278,22 +277,23 @@ public class SheetCopyTools {
         };
     }
 
-    private static void copyTitleRow(XSSFSheet origSheet, XSSFSheet targetSheet, XSSFCellStyle newStyle) {
+    private static void copyTitleRow(XSSFSheet origSheet, XSSFSheet targetSheet) {
         targetSheet.addMergedRegion(new CellRangeAddress(0, 1, 0, 0));
         targetSheet.addMergedRegion(new CellRangeAddress(0, 1, 1, 1));
         targetSheet.addMergedRegion(new CellRangeAddress(0, 1, 2, 2));
         targetSheet.addMergedRegion(new CellRangeAddress(0, 1, 3, 3));
 
-        doCopySheetData(origSheet, targetSheet.createRow(0), 2, newStyle);
-        doCopySheetData(origSheet, targetSheet.createRow(1), 3, newStyle);
-        doCopySheetData(origSheet, targetSheet.createRow(2), 4, newStyle);
+        doCopySheetData(origSheet, targetSheet.createRow(0), 2);
+        doCopySheetData(origSheet, targetSheet.createRow(1), 3);
+        doCopySheetData(origSheet, targetSheet.createRow(2), 4);
     }
 
-    private static void doCopySheetData(XSSFSheet origSheet, Row row, int rowIndex, XSSFCellStyle newStyle) {
+    private static void doCopySheetData(XSSFSheet origSheet, XSSFRow row, int rowIndex) {
         for (int colIndex = 0; colIndex < origSheet.getRow(rowIndex).getPhysicalNumberOfCells(); colIndex++) {
             XSSFCell origCell = origSheet.getRow(rowIndex).getCell(colIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-            Cell targetCell = row.createCell(colIndex);
-            CellStyle origStyle = origCell.getCellStyle();
+            XSSFCell targetCell = row.createCell(colIndex);
+            XSSFCellStyle origStyle = origCell.getCellStyle();
+            XSSFCellStyle newStyle = targetCell.getSheet().getWorkbook().createCellStyle();
             newStyle.cloneStyleFrom(origStyle);
             targetCell.setCellStyle(newStyle);
             switch (origCell.getCellType()) {
@@ -327,36 +327,16 @@ public class SheetCopyTools {
         }
         sheet.setForceFormulaRecalculation(true);
 
-        XSSFWorkbook workbook = sheet.getWorkbook();
-        XSSFCellStyle origStyle = sheet.getRow(0).getCell(0).getCellStyle();
-        XSSFCellStyle cellStyle = workbook.createCellStyle();
-        cellStyle.cloneStyleFrom(origStyle);
-        byte[] color = new byte[]{(byte) 220, (byte) 230, (byte) 241};
-        cellStyle.setFillForegroundColor(new XSSFColor(color, new DefaultIndexedColorMap()));
-        cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        cellStyle.setAlignment(HorizontalAlignment.CENTER);
-
-        XSSFCellStyle numberStyle = workbook.createCellStyle();
-        numberStyle.cloneStyleFrom(origStyle);
-        numberStyle.setAlignment(HorizontalAlignment.RIGHT);
-        numberStyle.setDataFormat(sheet.getWorkbook().createDataFormat().getFormat("#,##0.00"));
-
-        XSSFCellStyle rateStyle = workbook.createCellStyle();
-        rateStyle.cloneStyleFrom(origStyle);
-        rateStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00%"));
         Map<Integer, Integer> maxWidth = new HashMap<>(sheet.getRow(0).getPhysicalNumberOfCells());
         for (int rowIndex = 0; rowIndex < sheet.getPhysicalNumberOfRows(); rowIndex++) {
             for (int colIndex = 0; colIndex < sheet.getRow(rowIndex).getPhysicalNumberOfCells(); colIndex++) {
                 if (CellType.STRING.equals(sheet.getRow(rowIndex).getCell(colIndex).getCellType())) {
                     maxWidth.put(colIndex, Math.max(maxWidth.getOrDefault(colIndex, 0), sheet.getRow(rowIndex).getCell(colIndex).getStringCellValue().length() * 2 * 270));
                     sheet.setColumnWidth(colIndex, maxWidth.get(colIndex));
-                    sheet.getRow(rowIndex).getCell(colIndex).setCellStyle(cellStyle);
-                } else if (rowIndex > 1 && colIndex % 3 == 0) {
+                } else if (rowIndex > 0 && colIndex % 3 == 0) {
                     sheet.setColumnWidth(colIndex, 3000);
-                    sheet.getRow(rowIndex).getCell(colIndex).setCellStyle(rateStyle);
                 } else if (CellType.NUMERIC.equals(sheet.getRow(rowIndex).getCell(colIndex).getCellType())) {
                     sheet.setColumnWidth(colIndex, 3000);
-                    sheet.getRow(rowIndex).getCell(colIndex).setCellStyle(numberStyle);
                 }
             }
         }

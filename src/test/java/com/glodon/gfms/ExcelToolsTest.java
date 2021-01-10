@@ -19,8 +19,8 @@ import java.nio.file.Files;
 public class ExcelToolsTest {
 
     private static XSSFWorkbook targetWorkbook;
-    private static final String filePath = "E:/Users/zhangjingfei/Downloads/temp/excelTools/";
-    private static final String department = "计价产品部";
+    private static final String filePath = "/Users/zhangjingfei/Downloads/temp/excelTools/";
+    private static final String department = "EMT";
     private static File targetFile;
 
     @BeforeAll
