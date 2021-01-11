@@ -248,6 +248,7 @@ public class SheetCopyTools {
     public static void initCommonStyle(XSSFWorkbook workbook) {
         commonStyle = workbook.createCellStyle();
         Font font = workbook.createFont();
+        font.setFontHeight((short) 200);
         font.setFontName("微软雅黑");
         commonStyle.setFont(font);
         commonStyle.setBorderTop(BorderStyle.THIN);
@@ -380,9 +381,9 @@ public class SheetCopyTools {
                     maxWidth.put(colIndex, Math.max(maxWidth.getOrDefault(colIndex, 0), sheet.getRow(rowIndex).getCell(colIndex).getStringCellValue().length() * 2 * 256));
                     sheet.setColumnWidth(colIndex, maxWidth.get(colIndex));
                 } else if (rowIndex > 0 && colIndex % 3 == 0) {
-                    sheet.setColumnWidth(colIndex, 3000);
+                    sheet.setColumnWidth(colIndex, 3500);
                 } else if (CellType.NUMERIC.equals(sheet.getRow(rowIndex).getCell(colIndex).getCellType())) {
-                    sheet.setColumnWidth(colIndex, 3000);
+                    sheet.setColumnWidth(colIndex, 3500);
                 }
             }
         }
