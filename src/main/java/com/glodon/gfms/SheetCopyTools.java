@@ -264,6 +264,9 @@ public class SheetCopyTools {
         XSSFSheet targetSheet = targetWorkbook.createSheet(formatSheetName(origFileName));
         //标题行
         copyTitleRow(origSheet, targetSheet);
+        XSSFCellStyle stringStyle = targetWorkbook.createCellStyle();
+        XSSFCellStyle numberStyle = targetWorkbook.createCellStyle();
+        XSSFCellStyle rateStyle = targetWorkbook.createCellStyle();
         for (int rowIndex = 5; rowIndex < origSheet.getPhysicalNumberOfRows(); rowIndex++) {
             if (!department.equals(origSheet.getRow(rowIndex).getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue())) {
                 //且排除部门名称不匹配的行
@@ -271,7 +274,7 @@ public class SheetCopyTools {
             }
             //create row in this new sheet
             row = targetSheet.createRow(targetSheet.getLastRowNum() + 1);
-            doCopySheetData(origSheet, row, rowIndex);
+            doCopySheetData(origSheet, row, rowIndex, stringStyle, numberStyle, rateStyle);
         }
         createSumRowAndStyle(targetSheet);
         origWorkbook.close();
@@ -292,24 +295,58 @@ public class SheetCopyTools {
         targetSheet.addMergedRegion(new CellRangeAddress(0, 1, 2, 2));
         targetSheet.addMergedRegion(new CellRangeAddress(0, 1, 3, 3));
 
-        doCopySheetData(origSheet, targetSheet.createRow(0), 2);
-        doCopySheetData(origSheet, targetSheet.createRow(1), 3);
-        doCopySheetData(origSheet, targetSheet.createRow(2), 4);
+        XSSFCellStyle titleCellStyle = targetSheet.getWorkbook().createCellStyle();
+        doCopySheetTitle(origSheet, targetSheet.createRow(0), 2, titleCellStyle);
+        doCopySheetTitle(origSheet, targetSheet.createRow(1), 3, titleCellStyle);
+        XSSFCellStyle summaryCellStyle = targetSheet.getWorkbook().createCellStyle();
+        XSSFCellStyle summaryNumberCellStyle = targetSheet.getWorkbook().createCellStyle();
+        XSSFCellStyle summaryRateCellStyle = targetSheet.getWorkbook().createCellStyle();
+        doCopySheetData(origSheet, targetSheet.createRow(2), 4, summaryCellStyle, summaryNumberCellStyle, summaryRateCellStyle);
     }
 
-    private static void doCopySheetData(XSSFSheet origSheet, XSSFRow row, int rowIndex) {
+    private static void doCopySheetTitle(XSSFSheet origSheet, XSSFRow row, int rowIndex, XSSFCellStyle titleCellStyle) {
         for (int colIndex = 0; colIndex < origSheet.getRow(rowIndex).getPhysicalNumberOfCells(); colIndex++) {
             XSSFCell origCell = origSheet.getRow(rowIndex).getCell(colIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
             XSSFCell targetCell = row.createCell(colIndex);
             XSSFCellStyle origStyle = origCell.getCellStyle();
-            XSSFCellStyle newStyle = targetCell.getSheet().getWorkbook().createCellStyle();
-            newStyle.cloneStyleFrom(origStyle);
-            targetCell.setCellStyle(newStyle);
+            titleCellStyle.cloneStyleFrom(origStyle);
+            targetCell.setCellStyle(titleCellStyle);
             switch (origCell.getCellType()) {
                 case STRING -> targetCell.setCellValue(origCell.getRichStringCellValue().getString());
                 case NUMERIC -> targetCell.setCellValue(origCell.getNumericCellValue());
                 case FORMULA -> targetCell.setCellValue(origCell.getCellFormula());
                 case BLANK -> targetCell.setBlank();
+                default -> log.warn("No matched cell Type of {}", origCell.getCellType().toString());
+            }
+        }
+    }
+
+    private static void doCopySheetData(XSSFSheet origSheet, XSSFRow row, int rowIndex, XSSFCellStyle stringStyle, XSSFCellStyle numberStyle, XSSFCellStyle rateStyle) {
+        for (int colIndex = 0; colIndex < origSheet.getRow(rowIndex).getPhysicalNumberOfCells(); colIndex++) {
+            XSSFCell origCell = origSheet.getRow(rowIndex).getCell(colIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+            XSSFCell targetCell = row.createCell(colIndex);
+            XSSFCellStyle origStyle = origCell.getCellStyle();
+            switch (origCell.getCellType()) {
+                case STRING -> {
+                    targetCell.setCellValue(origCell.getRichStringCellValue().getString());
+                    stringStyle.cloneStyleFrom(origStyle);
+                    targetCell.setCellStyle(stringStyle);
+                }
+                case NUMERIC -> {
+                    targetCell.setCellValue(origCell.getNumericCellValue());
+                    if (targetCell.getColumnIndex() % 3 == 0) {
+                        rateStyle.cloneStyleFrom(origStyle);
+                        targetCell.setCellStyle(rateStyle);
+                    } else {
+                        numberStyle.cloneStyleFrom(origStyle);
+                        targetCell.setCellStyle(numberStyle);
+                    }
+                }
+                case FORMULA -> targetCell.setCellValue(origCell.getCellFormula());
+                case BLANK -> {
+                    targetCell.setBlank();
+                    targetCell.setCellStyle(numberStyle);
+                }
                 default -> log.warn("No matched cell Type of {}", origCell.getCellType().toString());
             }
         }

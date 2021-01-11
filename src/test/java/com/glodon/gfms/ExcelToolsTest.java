@@ -20,7 +20,7 @@ public class ExcelToolsTest {
 
     private static XSSFWorkbook targetWorkbook;
     private static final String filePath = "/Users/zhangjingfei/Downloads/temp/excelTools/";
-    private static final String department = "计价产品部";
+    private static final String department = "政务渠道部";
     private static File targetFile;
 
     @BeforeAll
