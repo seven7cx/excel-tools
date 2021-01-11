@@ -1,5 +1,11 @@
 package com.glodon.gfms;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.EasyExcelFactory;
+import com.alibaba.excel.ExcelReader;
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.event.AnalysisEventListener;
+import com.alibaba.excel.read.metadata.ReadSheet;
 import com.glodon.CommonUtils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -10,10 +16,7 @@ import org.apache.poi.xssf.usermodel.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author zhangjf-a
@@ -28,47 +31,53 @@ public class SheetCopyTools {
 
     //收入、产值表
     public static void copyIOSheet(String origFileName, XSSFWorkbook targetWorkbook, String department) throws IOException {
-        XSSFWorkbook origWorkbook = new XSSFWorkbook(new FileInputStream(filePath + origFileName));
-        Row row;
-        XSSFSheet origSheet = origWorkbook.getSheetAt(0);
         XSSFSheet targetSheet1 = targetWorkbook.createSheet("收入");
         XSSFSheet targetSheet2 = targetWorkbook.createSheet("产值");
         //标题行
         Arrays.asList("收入", "产值").forEach(title -> createTitleRow(targetWorkbook.getSheet(title), Arrays.asList("月份", "销售部门", "产品名称", "区域名称", "金额", "归属部门")));
 
-        XSSFSheet targetSheet;
         XSSFCellStyle cellStyle = targetWorkbook.createCellStyle();
         cellStyle.cloneStyleFrom(commonStyle);
-        for (int rowIndex = 1; rowIndex < origSheet.getPhysicalNumberOfRows(); rowIndex++) {
-            //create row in this new sheet
-            Row origRow = origSheet.getRow(rowIndex);
-            if (origRow.getCell(24).getStringCellValue().contains(department)) {
-                if (origRow.getCell(6).getStringCellValue().contains("收入")) {
-                    targetSheet = targetSheet1;
+
+        ExcelReader excelReader = EasyExcelFactory.read(filePath + origFileName, null, new AnalysisEventListener<LinkedHashMap<Integer, String>>() {
+
+            @Override
+            public void invoke(LinkedHashMap<Integer, String> data, AnalysisContext context) {
+                Row row;
+                if (data.get(24).contains(department)) {
+                    if (data.get(6).contains("收入")) {
+                        row = targetSheet1.createRow(targetSheet1.getLastRowNum() + 1);
+                    } else {
+                        row = targetSheet2.createRow(targetSheet2.getLastRowNum() + 1);
+                    }
                 } else {
-                    targetSheet = targetSheet2;
+                    return;
                 }
-            } else {
-                continue;
+
+                int columnIndex = 0;
+                row.createCell(columnIndex++).setCellValue(data.get(19));
+                row.createCell(columnIndex++).setCellValue(data.get(3));
+                row.createCell(columnIndex++).setCellValue(data.get(8));
+                row.createCell(columnIndex++).setCellValue(data.get(12));
+
+                Cell moneyCell = row.createCell(columnIndex++);
+                cellStyle.setDataFormat(targetWorkbook.createDataFormat().getFormat("#,##0.00"));
+                moneyCell.setCellStyle(cellStyle);
+                moneyCell.setCellValue(Double.parseDouble(data.get(17)));
+                row.createCell(columnIndex).setCellValue(CommonUtils.parseNameFromDisplayName(data.get(24)));
             }
 
-            row = targetSheet.createRow(targetSheet.getLastRowNum() + 1);
-            int columnIndex = 0;
-            row.createCell(columnIndex++).setCellValue(CommonUtils.toString(origRow.getCell(19).getDateCellValue(), "yyyy-MM"));
-            row.createCell(columnIndex++).setCellValue(origRow.getCell(3).getStringCellValue());
-            row.createCell(columnIndex++).setCellValue(origRow.getCell(8).getStringCellValue());
-            row.createCell(columnIndex++).setCellValue(origRow.getCell(12).getStringCellValue());
+            @Override
+            public void doAfterAllAnalysed(AnalysisContext context) {
 
-            Cell moneyCell = row.createCell(columnIndex++);
-            cellStyle.setDataFormat(targetWorkbook.createDataFormat().getFormat("#,##0.00"));
-            moneyCell.setCellStyle(cellStyle);
-            moneyCell.setCellValue(origRow.getCell(17).getNumericCellValue());
-            row.createCell(columnIndex).setCellValue(CommonUtils.parseNameFromDisplayName(origRow.getCell(24).getStringCellValue()));
-        }
+            }
+        }).headRowNumber(1).build();
 
+        ReadSheet sheet = EasyExcel.readSheet(0).build();
+        excelReader.read(sheet);
         //合计行
         Arrays.asList("收入", "产值").forEach(title -> createSumRow(targetWorkbook.getSheet(title)));
-        origWorkbook.close();
+        excelReader.finish();
     }
 
     private static void createTitleRow(XSSFSheet sheet, List<String> titleList) {
@@ -331,7 +340,7 @@ public class SheetCopyTools {
         for (int rowIndex = 0; rowIndex < sheet.getPhysicalNumberOfRows(); rowIndex++) {
             for (int colIndex = 0; colIndex < sheet.getRow(rowIndex).getPhysicalNumberOfCells(); colIndex++) {
                 if (CellType.STRING.equals(sheet.getRow(rowIndex).getCell(colIndex).getCellType())) {
-                    maxWidth.put(colIndex, Math.max(maxWidth.getOrDefault(colIndex, 0), sheet.getRow(rowIndex).getCell(colIndex).getStringCellValue().length() * 2 * 270));
+                    maxWidth.put(colIndex, Math.max(maxWidth.getOrDefault(colIndex, 0), sheet.getRow(rowIndex).getCell(colIndex).getStringCellValue().length() * 2 * 256));
                     sheet.setColumnWidth(colIndex, maxWidth.get(colIndex));
                 } else if (rowIndex > 0 && colIndex % 3 == 0) {
                     sheet.setColumnWidth(colIndex, 3000);

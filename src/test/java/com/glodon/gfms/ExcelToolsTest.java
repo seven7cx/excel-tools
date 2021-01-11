@@ -20,7 +20,7 @@ public class ExcelToolsTest {
 
     private static XSSFWorkbook targetWorkbook;
     private static final String filePath = "/Users/zhangjingfei/Downloads/temp/excelTools/";
-    private static final String department = "EMT";
+    private static final String department = "计价产品部";
     private static File targetFile;
 
     @BeforeAll
@@ -67,7 +67,7 @@ public class ExcelToolsTest {
      */
     @Test
     public void testCopyIOSheet() throws IOException {
-        SheetCopyTools.copyIOSheet("计价产品部-收入产值.xlsx", targetWorkbook, department);
+        SheetCopyTools.copyIOSheet("0505.收入预实表.xlsx", targetWorkbook, department);
     }
 
     /**
@@ -101,6 +101,6 @@ public class ExcelToolsTest {
      */
     @Test
     public void testFillSummarySheet() throws IOException {
-        DataFillTools.fillSummarySheet(filePath + "010102.预实利润表（销售收入.xlsx", targetWorkbook, department);
+        DataFillTools.fillSummarySheet(filePath + "010102.预实利润表.xlsx", targetWorkbook, department);
     }
 }
