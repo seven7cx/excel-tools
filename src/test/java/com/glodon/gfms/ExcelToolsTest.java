@@ -16,11 +16,12 @@ import java.nio.file.Files;
  * @version 1.0
  * @since 01/05/2021
  */
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ExcelToolsTest {
 
     private static XSSFWorkbook targetWorkbook;
     private static final String filePath = "/Users/zhangjingfei/Downloads/temp/excelTools/";
-    private static final String department = "政务渠道部";
+    private static final String department = "数字广联达";
     private static File targetFile;
 
     @BeforeAll
@@ -65,6 +66,7 @@ public class ExcelToolsTest {
     /**
      * Method: copyIOSheet(String origFileName, Workbook targetWorkbook, String department) throws IOException
      */
+    @Order(value = 0)
     @Test
     public void testCopyIOSheet() throws IOException {
         SheetCopyTools.copyIOSheet("0505.收入预实表.xlsx", targetWorkbook, department);
@@ -73,6 +75,7 @@ public class ExcelToolsTest {
     /**
      * Method: copyInnerSheet(String origFileName, Workbook targetWorkbook, String department) throws IOException
      */
+    @Order(value = 1)
     @Test
     public void testCopyInnerSheet() throws IOException {
         SheetCopyTools.copyInnerSheet("0301.佣金特许权收入.xlsx", targetWorkbook, department);
@@ -81,6 +84,7 @@ public class ExcelToolsTest {
     /**
      * Method: copyResourceSheet(String origFileName, Workbook targetWorkbook, String department) throws IOException
      */
+    @Order(value = 2)
     @Test
     public void testCopyResourceSheet() throws IOException {
         SheetCopyTools.copyResourceSheet("bi_resource.xlsx", targetWorkbook, department);
@@ -89,6 +93,7 @@ public class ExcelToolsTest {
     /**
      * Method: copyCostSheet(String origFileName, Workbook targetWorkbook, String department) throws IOException
      */
+    @Order(value = 3)
     @Test
     public void testCopyCostSheet() throws IOException {
         SheetCopyTools.copyCostSheet("0402.专项费用预实.xlsx", targetWorkbook, department);
@@ -99,6 +104,7 @@ public class ExcelToolsTest {
     /**
      * Method: fillSummarySheet(String origFileName, XSSFWorkbook workbook, String department) throws IOException
      */
+    @Order(value = 4)
     @Test
     public void testFillSummarySheet() throws IOException {
         DataFillTools.fillSummarySheet(filePath + "010102.预实利润表.xlsx", targetWorkbook, department);
