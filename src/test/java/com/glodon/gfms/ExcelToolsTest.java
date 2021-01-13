@@ -21,7 +21,7 @@ public class ExcelToolsTest {
 
     private static XSSFWorkbook targetWorkbook;
     private static final String filePath = "/Users/zhangjingfei/Downloads/temp/excelTools/";
-    private static final String department = "数字广联达";
+    private static final String department = "项目管理产品部-云图产品部";
     private static File targetFile;
 
     @BeforeAll
@@ -69,7 +69,7 @@ public class ExcelToolsTest {
     @Order(value = 0)
     @Test
     public void testCopyIOSheet() throws IOException {
-        SheetCopyTools.copyIOSheet("0505.收入预实表.xlsx", targetWorkbook, department);
+//        SheetCopyTools.copyIOSheet("0505.收入预实表.xlsx", targetWorkbook, department);
     }
 
     /**

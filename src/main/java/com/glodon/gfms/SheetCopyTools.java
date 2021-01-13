@@ -8,6 +8,7 @@ import com.alibaba.excel.event.AnalysisEventListener;
 import com.alibaba.excel.read.metadata.ReadSheet;
 import com.glodon.CommonUtils;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -27,20 +28,20 @@ public class SheetCopyTools {
 
     @Setter
     private static String filePath = "";
-    private static XSSFCellStyle commonStyle;
+    private static final Map<Integer, XSSFCellStyle> commonStyleMap = new HashMap<>();
 
     //收入、产值表
-    public static void copyIOSheet(String origFileName, XSSFWorkbook targetWorkbook, String department) throws IOException {
+    @SneakyThrows
+    public static void copyIOSheet(String origFileName, XSSFWorkbook targetWorkbook, String department) {
         XSSFSheet targetSheet1 = targetWorkbook.createSheet("收入");
         XSSFSheet targetSheet2 = targetWorkbook.createSheet("产值");
         //标题行
         Arrays.asList("收入", "产值").forEach(title -> createTitleRow(targetWorkbook.getSheet(title), Arrays.asList("月份", "销售部门", "产品名称", "区域名称", "金额", "归属部门")));
 
         XSSFCellStyle cellStyle = targetWorkbook.createCellStyle();
-        cellStyle.cloneStyleFrom(commonStyle);
+        cellStyle.cloneStyleFrom(commonStyleMap.get(targetWorkbook.hashCode()));
 
-        ExcelReader excelReader = EasyExcelFactory.read(filePath + origFileName, null, new AnalysisEventListener<LinkedHashMap<Integer, String>>() {
-
+        ExcelReader excelReader = EasyExcelFactory.read(origFileName, null, new AnalysisEventListener<LinkedHashMap<Integer, String>>() {
             @Override
             public void invoke(LinkedHashMap<Integer, String> data, AnalysisContext context) {
                 Row row;
@@ -83,7 +84,7 @@ public class SheetCopyTools {
     private static void createTitleRow(XSSFSheet sheet, List<String> titleList) {
         byte[] color = new byte[]{(byte) 220, (byte) 230, (byte) 241};
         XSSFCellStyle cellStyle = sheet.getWorkbook().createCellStyle();
-        cellStyle.cloneStyleFrom(commonStyle);
+        cellStyle.cloneStyleFrom(commonStyleMap.get(sheet.getWorkbook().hashCode()));
         cellStyle.setFillForegroundColor(new XSSFColor(color, new DefaultIndexedColorMap()));
         cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         cellStyle.setAlignment(HorizontalAlignment.CENTER);
@@ -111,9 +112,9 @@ public class SheetCopyTools {
 
         XSSFSheet targetSheet;
         XSSFCellStyle moneyCellStyle = targetWorkbook.createCellStyle();
-        moneyCellStyle.cloneStyleFrom(commonStyle);
+        moneyCellStyle.cloneStyleFrom(commonStyleMap.get(targetWorkbook.hashCode()));
         XSSFCellStyle rateCellStyle = targetWorkbook.createCellStyle();
-        rateCellStyle.cloneStyleFrom(commonStyle);
+        rateCellStyle.cloneStyleFrom(commonStyleMap.get(targetWorkbook.hashCode()));
         for (int rowIndex = 3; rowIndex < origSheet.getPhysicalNumberOfRows(); rowIndex++) {
             //create row in this new sheet
             Row origRow = origSheet.getRow(rowIndex);
@@ -166,6 +167,7 @@ public class SheetCopyTools {
     }
 
     private static void createSumRow(Sheet sheet) {
+        XSSFCellStyle commonStyle = commonStyleMap.get(sheet.getWorkbook().hashCode());
         for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
             for (int j = 0; j < sheet.getRow(i).getPhysicalNumberOfCells(); j++) {
                 Cell cell = sheet.getRow(i).getCell(j);
@@ -213,7 +215,7 @@ public class SheetCopyTools {
 
         XSSFSheet targetSheet;
         XSSFCellStyle numberStyle = targetWorkbook.createCellStyle();
-        numberStyle.cloneStyleFrom(commonStyle);
+        numberStyle.cloneStyleFrom(commonStyleMap.get(targetWorkbook.hashCode()));
         for (int rowIndex = 1; rowIndex < origSheet.getPhysicalNumberOfRows(); rowIndex++) {
             //create row in this new sheet
             Row origRow = origSheet.getRow(rowIndex);
@@ -246,7 +248,7 @@ public class SheetCopyTools {
     }
 
     public static void initCommonStyle(XSSFWorkbook workbook) {
-        commonStyle = workbook.createCellStyle();
+        XSSFCellStyle commonStyle = workbook.createCellStyle();
         Font font = workbook.createFont();
         font.setFontHeight((short) 200);
         font.setFontName("微软雅黑");
@@ -255,6 +257,7 @@ public class SheetCopyTools {
         commonStyle.setBorderBottom(BorderStyle.THIN);
         commonStyle.setBorderLeft(BorderStyle.THIN);
         commonStyle.setBorderRight(BorderStyle.THIN);
+        commonStyleMap.put(workbook.hashCode(), commonStyle);
     }
 
     //人专基费用
