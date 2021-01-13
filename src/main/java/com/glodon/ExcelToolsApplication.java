@@ -54,7 +54,7 @@ public class ExcelToolsApplication {
 
             if (targetFile.exists()) {
                 boolean delete = targetFile.delete();
-                log.info("Delete test file {}，result = {}", department, delete);
+                log.info("Delete file {}，result = {}", department, delete);
             }
 
             Files.copy(exampleFile.toPath(), targetFile.toPath());
