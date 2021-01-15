@@ -6,6 +6,7 @@ import com.alibaba.excel.ExcelReader;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
 import com.alibaba.excel.read.metadata.ReadSheet;
+import com.alibaba.excel.support.ExcelTypeEnum;
 import com.glodon.CommonUtils;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -41,7 +42,7 @@ public class SheetCopyTools {
         XSSFCellStyle cellStyle = targetWorkbook.createCellStyle();
         cellStyle.cloneStyleFrom(commonStyleMap.get(targetWorkbook.hashCode()));
 
-        ExcelReader excelReader = EasyExcelFactory.read(origFileName, null, new AnalysisEventListener<LinkedHashMap<Integer, String>>() {
+        ExcelReader excelReader = EasyExcelFactory.read(filePath + origFileName, null, new AnalysisEventListener<LinkedHashMap<Integer, String>>() {
             @Override
             public void invoke(LinkedHashMap<Integer, String> data, AnalysisContext context) {
                 Row row;
@@ -72,7 +73,7 @@ public class SheetCopyTools {
             public void doAfterAllAnalysed(AnalysisContext context) {
 
             }
-        }).headRowNumber(1).build();
+        }).headRowNumber(1).excelType(ExcelTypeEnum.XLSX).build();
 
         ReadSheet sheet = EasyExcel.readSheet(0).build();
         excelReader.read(sheet);

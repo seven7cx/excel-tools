@@ -89,7 +89,7 @@ class ExcelTask implements Runnable {
     private static void createExcel(XSSFWorkbook targetWorkbook, String department, String filePath) {
         log.info("[{}] 开始创建Excel", department);
         log.info("[{}] 收入产值", department);
-        SheetCopyTools.copyIOSheet(filePath + "0505.收入预实表.xlsx", targetWorkbook, department);
+        SheetCopyTools.copyIOSheet("0505.收入预实表.xlsx", targetWorkbook, department);
         log.info("[{}] 佣金特许权", department);
         SheetCopyTools.copyInnerSheet("0301.佣金特许权收入.xlsx", targetWorkbook, department);
         log.info("[{}] 资源交易", department);
